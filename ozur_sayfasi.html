@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Özür Dilerim</title>
+  <style>
+    :root{ --bg:#111827; --card:#0b1220; --accent:#ff4d6d; --text:#f8fafc }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Helvetica Neue', Arial}
+    body{
+      background: linear-gradient(180deg,#0f1724 0%, #071026 100%);
+      color:var(--text);
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+
+    .wrap{width:100%;max-width:720px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));border-radius:16px;padding:36px;text-align:center;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
+    h1{font-size:28px;margin:0 0 12px}
+    p.lead{margin:0 0 20px;color:rgba(255,255,255,0.85)}
+
+    .big-btn{appearance:none;border:0;padding:14px 22px;font-size:18px;border-radius:12px;background:linear-gradient(90deg,var(--accent),#ff7a91);color:white;cursor:pointer;box-shadow:0 6px 18px rgba(255,77,109,0.18)}
+
+    /* Hidden stage */
+    .stage{display:none;position:relative;overflow:hidden;padding:32px;border-radius:12px;margin-top:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))}
+    .stage.show{display:block}
+
+    .message{font-size:20px;line-height:1.4;margin-bottom:18px}
+
+    /* Hearts */
+    .hearts{position:absolute;inset:0;pointer-events:none}
+    .heart{
+      position:absolute;width:40px;height:40px;transform:translateY(100vh) rotate(15deg);opacity:0;
+      display:inline-block;background:linear-gradient(180deg,#ff6b93,#ff2d68);clip-path:path('M20 36s-12-7.5-15-11.5C0 17.5 5.5 8 12 8c3.5 0 6 2.5 8 4.5C22 10.5 24.5 8 28 8c6.5 0 12 9.5 7 16.5C32 28.5 20 36 20 36z');
+    }
+    /* fallback for clip-path unsupported browsers: use pseudo heart via before/after */
+    .heart::before,.heart::after{content:'';position:absolute;background:inherit;border-radius:50%;width:60%;height:60%}
+    .heart::before{top:-30%;left:10%}
+    .heart::after{left:30%;top:-30%}
+
+    @keyframes floatUp{
+      0%{transform:translateY(30vh) scale(0.6) rotate(0deg);opacity:0}
+      10%{opacity:1}
+      100%{transform:translateY(-20vh) scale(1.15) rotate(360deg);opacity:0}
+    }
+
+    .question{margin-top:22px}
+    .single-btn{background:transparent;border:0;padding:14px 20px;font-size:20px;border-radius:999px;color:var(--text);cursor:pointer;box-shadow:inset 0 -2px 0 rgba(255,255,255,0.02)}
+    .yes{display:inline-block;background:linear-gradient(90deg,#7df9b8,#2ee6a7);color:#062016;padding:12px 28px;border-radius:999px;font-weight:700;box-shadow:0 8px 30px rgba(45,230,167,0.12);border:0}
+
+    /* Heart burst when yes clicked */
+    .burst{position:fixed;inset:0;pointer-events:none}
+
+    /* small screens */
+    @media (max-width:420px){h1{font-size:22px}.big-btn{width:100%}}
+  </style>
+</head>
+<body>
+  <div class="wrap" role="main" aria-live="polite">
+    <h1>Bir şey söylemem lazım...</h1>
+    <p class="lead">Aşağıdaki butona basınca, içten bir özür göreceksin.</p>
+
+    <button id="openBtn" class="big-btn" aria-controls="stage">Özür Dilerim</button>
+
+    <div id="stage" class="stage" role="region" aria-hidden="true">
+      <div class="message" id="message">—</div>
+
+      <div class="hearts" id="hearts"></div>
+
+      <div class="question" id="question" style="display:none">
+        <p style="font-size:20px;margin:0 0 12px">Affettin mi?</p>
+        <button id="yesBtn" class="yes" aria-label="Evet">Evet</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="burst" id="burst"></div>
+
+  <script>
+    // Kişiselleştirmek istersen burayı değiştir
+    const apologyText = "Çok özür dilerim hayatım. Yaptıklarım yanlıştı; lütfen affet bu aciz adamı.";
+
+    const openBtn = document.getElementById('openBtn');
+    const stage = document.getElementById('stage');
+    const message = document.getElementById('message');
+    const hearts = document.getElementById('hearts');
+    const question = document.getElementById('question');
+    const yesBtn = document.getElementById('yesBtn');
+    const burst = document.getElementById('burst');
+
+    function createHeart(xPercent){
+      const h = document.createElement('div');
+      h.className = 'heart';
+      const size = Math.floor(Math.random()*38)+24;
+      h.style.width = size+'px';
+      h.style.height = size+'px';
+      const left = Math.max(5, Math.min(95, xPercent + (Math.random()*20-10)));
+      h.style.left = left + '%';
+      h.style.top = (80 + Math.random()*10) + '%';
+      const delay = Math.random()*0.6;
+      const duration = 2.6 + Math.random()*1.6;
+      h.style.animation = `floatUp ${duration}s linear ${delay}s forwards`;
+      hearts.appendChild(h);
+      // temizle
+      setTimeout(()=>{h.remove()}, (delay+duration+0.4)*1000);
+    }
+
+    function burstHearts(count){
+      for(let i=0;i<count;i++){
+        const el = document.createElement('div');
+        el.className = 'heart';
+        const size = Math.floor(Math.random()*48)+18;
+        el.style.width = size+'px';
+        el.style.height = size+'px';
+        const left = Math.random()*100;
+        el.style.left = left + '%';
+        el.style.top = (50 + Math.random()*30) + '%';
+        const delay = 0.02 * i;
+        const duration = 1.6 + Math.random();
+        el.style.animation = `floatUp ${duration}s cubic-bezier(.2,.9,.3,1) ${delay}s forwards`;
+        burst.appendChild(el);
+        setTimeout(()=>el.remove(), (delay+duration+0.5)*1000);
+      }
+    }
+
+    openBtn.addEventListener('click', ()=>{
+      // göster
+      stage.classList.add('show');
+      stage.setAttribute('aria-hidden','false');
+      message.textContent = apologyText;
+      // kalpler belirsin
+      const interval = setInterval(()=>{
+        createHeart(Math.random()*100);
+      }, 220);
+      // 5 saniye sonra kalpler duracak ve soru çıkacak
+      setTimeout(()=>{
+        clearInterval(interval);
+        question.style.display = 'block';
+      }, 4000);
+      // scroll to stage on small screens
+      stage.scrollIntoView({behavior:'smooth',block:'center'});
+    });
+
+    yesBtn.addEventListener('click', ()=>{
+      // sadece evet tuşu var — kullanıcıya net bir dönüş
+      question.style.display = 'none';
+      message.textContent = 'Seni çok seviyorum. Teşekkür ederim ❤️';
+      // büyük kalp patlaması
+      burstHearts(28);
+
+      // küçük kutlama metni görsel efekti
+      const conf = document.createElement('div');
+      conf.style.position='fixed';conf.style.left='50%';conf.style.top='18%';conf.style.transform='translateX(-50%)';
+      conf.style.fontSize='20px';conf.style.fontWeight='700';conf.style.padding='12px 20px';conf.style.borderRadius='12px';
+      conf.style.background='linear-gradient(90deg,#ff9ab3,#ffd1e0)';conf.style.color='#3a0217';conf.textContent='Seni affettiği için çok şanslısın ❤️';
+      document.body.appendChild(conf);
+      setTimeout(()=>conf.remove(),3000);
+    });
+
+    // Kullanıcı deneyimi: linke doğrudan geldiğinde otomatik açılmasın — kullanıcı önce butona bassın
+
+    // Erişilebilirlik: klavye ile yesBtn'e ulaşılabilsin
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter' || e.key === ' '){
+        const active = document.activeElement;
+        if(active === openBtn){ openBtn.click(); }
+        else if(active === yesBtn){ yesBtn.click(); }
+      }
+    });
+  </script>
+</body>
+</html>
